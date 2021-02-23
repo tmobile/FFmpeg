@@ -25,6 +25,7 @@
  * @author Thilo Borgmann <thilo.borgmann@mail.de>
  */
 
+#import <CoreMediaIO/CMIOHardware.h>
 #import <AVFoundation/AVFoundation.h>
 #include <pthread.h>
 
@@ -441,6 +442,14 @@ static int add_video_device(AVFormatContext *s, AVCaptureDevice *video_device)
     NSDictionary *capture_dict;
     dispatch_queue_t queue;
 
+    CMIOObjectPropertyAddress prop    = {
+		kCMIOHardwarePropertyAllowScreenCaptureDevices,
+		kCMIOObjectPropertyScopeGlobal,
+		kCMIOObjectPropertyElementMaster
+	};
+	UInt32 allow   = 1;
+    CMIOObjectSetPropertyData(kCMIOObjectSystemObject, &prop, 0, NULL, sizeof(allow), &allow);
+
     if (ctx->video_device_index < ctx->num_video_devices) {
         capture_input = (AVCaptureInput*) [[[AVCaptureDeviceInput alloc] initWithDevice:video_device error:&error] autorelease];
     } else {
@@ -761,6 +770,15 @@ static int avf_read_header(AVFormatContext *s)
     AVFContext *ctx         = (AVFContext*)s->priv_data;
     AVCaptureDevice *video_device = nil;
     AVCaptureDevice *audio_device = nil;
+
+    CMIOObjectPropertyAddress prop = {
+		kCMIOHardwarePropertyAllowScreenCaptureDevices,
+		kCMIOObjectPropertyScopeGlobal,
+		kCMIOObjectPropertyElementMaster
+	};
+	UInt32 allow = 1;
+	CMIOObjectSetPropertyData(kCMIOObjectSystemObject, &prop, 0, NULL, sizeof(allow), &allow);
+
     // Find capture device
     NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
     NSArray *devices_muxed = [AVCaptureDevice devicesWithMediaType:AVMediaTypeMuxed];
